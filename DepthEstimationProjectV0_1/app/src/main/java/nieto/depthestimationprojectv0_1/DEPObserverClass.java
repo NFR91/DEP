@@ -18,9 +18,10 @@ public class DEPObserverClass{
     private double  [] gx1,gx2,gx3;                                                                 // Gyroscopio filtrado.
     private double  [] y1,y2;                                                                       // Proyección cruda.
     private double  [] t;                                                                           // tiempo
-    private double fL=0.0056;                                                                       // distancia focal
+    private double fL=0.004;                                                                       // distancia focal
     private double h;                                                                               // Paso del tiempo
     private double pixelpermeter= 0.00000984;                                                       // pixeles por metro.
+    private double y1c=480/2,y2c=640/2;
 
     // Filtros ver final del documento.
 
@@ -29,7 +30,7 @@ public class DEPObserverClass{
     {
         int datalength = 1;                                                                         // Vamos a obtener el tamaño real de los vecotres.
 
-        // OBtenemos solo los datos, no los vecotres completos que vienen con 0s.
+        // Obtenemos solo los datos, no los vectores completos que vienen con 0s.
         for (int i=1; time[i]>0 ;i++ )
             datalength++;                                                                           // aumentamos el valor de longitud.
 
@@ -39,12 +40,12 @@ public class DEPObserverClass{
         for (int i=0; i<datalength; i++)
         {
             ax1RAW[i] = (double)xAccel[i];                                                          // Aceleración en x1
-            ax2RAW[i] = (double)yAccel[i];                                                          // Aceleración en x2
-            ax3RAW[i] = (double)zAccel[i];                                                          // Aceleración en x3
+            ax2RAW[i] = -(double)yAccel[i];                                                          // Aceleración en x2
+            ax3RAW[i] = -(double)zAccel[i];                                                          // Aceleración en x3
             gx1RAW[i] = (double)xGyro[i];                                                           // Velocidad angular en x1
-            gx2RAW[i] = (double)yGyro[i];                                                           // Velocidad angular en x2
-            gx3RAW[i] = (double)zGyro[i];                                                           // Velocidad angular en x3
-            y1[i]  = (double)yY[i] * pixelpermeter;                                                 // Projección en metros en y1.
+            gx2RAW[i] = -(double)yGyro[i];                                                           // Velocidad angular en x2
+            gx3RAW[i] = -(double)zGyro[i];                                                           // Velocidad angular en x3
+            y1[i]  = (-(double)yY[i]+ y1c) * pixelpermeter;                                         // Projección en metros en y1.
             y2[i]  = (double)yX[i] * pixelpermeter;                                                 // Projección en metros en y2.
             t[i]   = (double)time[i];                                                               // tiempo.
         }
