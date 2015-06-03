@@ -45,8 +45,8 @@ public class DEPObserverClass{
             gx1RAW[i] = (double)xGyro[i];                                                           // Velocidad angular en x1
             gx2RAW[i] = -(double)yGyro[i];                                                           // Velocidad angular en x2
             gx3RAW[i] = -(double)zGyro[i];                                                           // Velocidad angular en x3
-            y1[i]  = (-(double)yY[i]+ y1c) * pixelpermeter;                                         // Projección en metros en y1.
-            y2[i]  = (double)yX[i] * pixelpermeter;                                                 // Projección en metros en y2.
+            y1[i]  = -(-(double)yY[i]+ y1c) * (pixelpermeter/fL);                                         // Projección en metros en y1.
+            y2[i]  = -((double)yX[i]- y2c) * (pixelpermeter/fL);                                                 // Projección en metros en y2.
             t[i]   = (double)time[i];                                                               // tiempo.
         }
     }
@@ -98,19 +98,24 @@ public class DEPObserverClass{
         this.filterVelData();                                                                       // Filtramos la velocidad
         this.integrateVel2Pos();                                                                    // Integramos la posición.
 
-        double dz = 10/fL;                                                                          // Valor de dz
-        double zoest = (1/20000)*(dz-(1/fL));                                                       // Estimación inicial de x3
-        double K=1*Math.pow(10,6);                                                                  // Constante convergencia.
+
+        double zoest = 100;                                                       // Estimación inicial de x3
+        double K=50;                                                                  // Constante convergencia.
 
         // Obtenemos las condiciones iniciales.
         for (int i=0;i<3;i++)
         {
-            x1est[i] = y1[i] / (fL * zoest);                                                        // Condiciones iniciales de x1
-            x2est[i] = y2[i] / (fL * zoest);                                                        // Condiciones iniciales de x2
-            x3est[i] = 1/zoest;                                                                     // Condiciones iniciales de x3
-            y1est[i] = y1[i];                                                                       // Condiciones iniciales de y1
-            y2est[i] = y2[i];                                                                       // Condiciones iniciales de y2
-            vest[i] = zoest-DEPProcessingClass.getDseda(vx1[i],vx2[i],vx3[i],y1[i],y2[i],fL,K);     // Condiciones iniciales de v
+            //x1est[i] = y1[i] / (fL * zoest);                                                        // Condiciones iniciales de x1
+            //x2est[i] = y2[i] / (fL * zoest);                                                        // Condiciones iniciales de x2
+            //x3est[i] = 1/zoest;                                                                     // Condiciones iniciales de x3
+
+            y1est[i] = y1[i]*0.0;                                                                       // Condiciones iniciales de y1
+            y2est[i] = y2[i]*0.0;                                                                       // Condiciones iniciales de y2
+
+            x1est[i] = y1est[i] / (zoest);                                                        // Condiciones iniciales de x1
+            x2est[i] = y2est[i] / (zoest);                                                        // Condiciones iniciales de x2
+            x3est[i] = 1/zoest;
+            vest[i] = zoest-DEPProcessingClass.getDseda(vx1[i],vx2[i],vx3[i],y1[i],y2[i],1,K);     // Condiciones iniciales de v
         }
 
         double[] estimation;                                                                        // Vector que almacenará la estimación.
@@ -126,7 +131,7 @@ public class DEPObserverClass{
                     y1[i-1],y2[i-1],y1[i-2],y2[i-2],
                     y1est[i-1],y2est[i-1],y1est[i-2],y2est[i-2],
                     vest[i-1],vest[i-2],
-                    fL,h,K,
+                    1,h,K,
                     gx1[i-1],gx2[i-1],gx3[i-1],gx1[i-2],gx2[i-2],gx3[i-2]
                     );                                                                              // Observador de orden completo.
 

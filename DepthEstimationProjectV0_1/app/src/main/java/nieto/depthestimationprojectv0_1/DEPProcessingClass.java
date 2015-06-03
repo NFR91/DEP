@@ -199,15 +199,18 @@ public  class DEPProcessingClass
         double gamma = K * ( (((fL*ax1)-((ax3/2)*y1))*y1) + (((fL*ax2)-((ax3/2)*y2))*y2) );                 // Calculamos el valor de gamma.
         double dseda = getDseda(vx1, vx2, vx3, y1, y2, fL, K);                                              // Calculamos el valor de dseda.
 
-        double a11=0   ,a12=gx3,a13=-gx2,
-               a21=-gx3,a22=0  ,a23=gx1,
-               a31=gx2 ,a32=-gx1,a33=0;                                                                     // Generamos la matriz de la velocidad angular.
+       // double a11=0   ,a12=gx3,a13=-gx2,
+       //        a21=-gx3,a22=0  ,a23=gx1,
+       //        a31=gx2 ,a32=-gx1,a33=0;                                                                     // Generamos la matriz de la velocidad angular.
+        double  a11=0   ,a12=0  ,a13=0,
+                a21=0   ,a22=0  ,a23=0,
+                a31=0   ,a32=-0 ,a33=0;
 
         double f1 = (fL*a13) + ((a11-a33)*y1) + (a12*y2) - ((a31/fL)*Math.pow(y1,2)) - ((a32/fL)*y1*y2);    // Calculamos el valor de f1.
         double f2 = (fL*a23) + ((a22-a33)*y2) + (a21*y1) - ((a32/fL)*Math.pow(y2,2)) - ((a31/fL)*y1*y2);    // Calculamos el valor de f2
         double f3 = -( ((a31/fL)*y1) + ((a32/fL)*y2) + a33);                                                // Calculamos el valor de f3
 
-        double w1 = ((fL*vx1)-(vx2*y1));                                                                    // valor para facilitar la ecuacuación del observador.
+        double w1 = ((fL*vx1)-(vx3*y1));                                                                    // valor para facilitar la ecuacuación del observador.
         double w2 = ((fL*vx2)-(vx3*y2));                                                                    // valor para faclilitar la ecuacuón del observador.
 
         double y1error = y1est-y1;                                                                          // Calculamos el error entre la estimación e y1
