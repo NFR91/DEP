@@ -15,14 +15,15 @@ public class DEPObserverClass{
     private double  [] x1est,x2est,x3est;                                                           // Posición estimada.
     private double  [] y1est,y2est;                                                                 // Projección estimada.
     private double  [] vest;                                                                        // V
+    private double  [] dsedaest;                                                                    // dsedaest .
     private double  [] gx1,gx2,gx3;                                                                 // Gyroscopio filtrado.
     private double  [] y1,y2;                                                                       // Proyección cruda.
     private double  [] t;                                                                           // tiempo
-    private double fL=0.004;                                                                       // distancia focal
+    private double fL=0.0049;                                                                       // distancia focal
     private double h;                                                                               // Paso del tiempo
     private double pixelpermeter= 0.00000984;                                                       // pixeles por metro.
     private double y1c=480/2,y2c=640/2;
-
+    private double [] hpfilter,lpfilter;
     // Filtros ver final del documento.
 
     /*Constructor de la calse*/
@@ -49,6 +50,10 @@ public class DEPObserverClass{
             y2[i]  = -((double)yX[i]- y2c) * (pixelpermeter/fL);                                                 // Projección en metros en y2.
             t[i]   = (double)time[i];                                                               // tiempo.
         }
+
+        hpfilter = DEPCSVClass.getFilterFromFile("HPF.fcf");
+        lpfilter = DEPCSVClass.getFilterFromFile("LPF.fcf");
+
     }
 
 
@@ -58,20 +63,20 @@ public class DEPObserverClass{
     /*filtramos los datos crudos.*/
     public void filterRAWData()
     {
-        ax1 = DEPProcessingClass.dataFIRFilter(ax1RAW,LOWPASSFILTER);                               // Filtramos la aceleración en x1
-        ax2 = DEPProcessingClass.dataFIRFilter(ax2RAW,LOWPASSFILTER);                               // Filtramos la aceleración en x2
-        ax3 = DEPProcessingClass.dataFIRFilter(ax3RAW,LOWPASSFILTER);                               // Filtramos la aceleración en x3
-        gx1 = DEPProcessingClass.dataFIRFilter(gx1RAW,LOWPASSFILTER);                               // Filtramos la velocidad angular en x1
-        gx2 = DEPProcessingClass.dataFIRFilter(gx2RAW,LOWPASSFILTER);                               // Filtramos la velocidad angular en x2
-        gx3 = DEPProcessingClass.dataFIRFilter(gx3RAW,LOWPASSFILTER);                               // Filtramos la velocidad angular en x3
+        ax1 = DEPProcessingClass.dataFIRFilter(ax1RAW,lpfilter);                               // Filtramos la aceleración en x1
+        ax2 = DEPProcessingClass.dataFIRFilter(ax2RAW,lpfilter);                               // Filtramos la aceleración en x2
+        ax3 = DEPProcessingClass.dataFIRFilter(ax3RAW,lpfilter);                               // Filtramos la aceleración en x3
+        gx1 = DEPProcessingClass.dataFIRFilter(gx1RAW,lpfilter);                               // Filtramos la velocidad angular en x1
+        gx2 = DEPProcessingClass.dataFIRFilter(gx2RAW,lpfilter);                               // Filtramos la velocidad angular en x2
+        gx3 = DEPProcessingClass.dataFIRFilter(gx3RAW,lpfilter);                               // Filtramos la velocidad angular en x3
     }
 
     /*Filtramos la velocidad*/
     public void filterVelData()
     {
-        vx1 = DEPProcessingClass.dataFIRFilter(vx1,HIGHPASSFILTER);                                 // Filtramos la velocidad en x1
-        vx2 = DEPProcessingClass.dataFIRFilter(vx2,HIGHPASSFILTER);                                 // Filtramos la velocidad en x2
-        vx3 = DEPProcessingClass.dataFIRFilter(vx3,HIGHPASSFILTER);                                 // Filtramos la velocidad en x3
+        vx1 = DEPProcessingClass.dataFIRFilter(vx1,hpfilter);                                 // Filtramos la velocidad en x1
+        vx2 = DEPProcessingClass.dataFIRFilter(vx2,hpfilter);                                 // Filtramos la velocidad en x2
+        vx3 = DEPProcessingClass.dataFIRFilter(vx3,hpfilter);                                 // Filtramos la velocidad en x3
     }
 
     /*Realizamos la integración de la aceleración para obtener la velocidad.*/
@@ -99,8 +104,9 @@ public class DEPObserverClass{
         this.integrateVel2Pos();                                                                    // Integramos la posición.
 
 
-        double zoest = 100;                                                       // Estimación inicial de x3
+        double zoest = 1;                                                       // Estimación inicial de x3
         double K=50;                                                                  // Constante convergencia.
+        double Kz=10;
 
         // Obtenemos las condiciones iniciales.
         for (int i=0;i<3;i++)
@@ -109,13 +115,14 @@ public class DEPObserverClass{
             //x2est[i] = y2[i] / (fL * zoest);                                                        // Condiciones iniciales de x2
             //x3est[i] = 1/zoest;                                                                     // Condiciones iniciales de x3
 
-            y1est[i] = y1[i]*0.0;                                                                       // Condiciones iniciales de y1
-            y2est[i] = y2[i]*0.0;                                                                       // Condiciones iniciales de y2
+            y1est[i] = y1[i];                                                                       // Condiciones iniciales de y1
+            y2est[i] = y2[i];                                                                       // Condiciones iniciales de y2
 
             x1est[i] = y1est[i] / (zoest);                                                        // Condiciones iniciales de x1
             x2est[i] = y2est[i] / (zoest);                                                        // Condiciones iniciales de x2
             x3est[i] = 1/zoest;
-            vest[i] = zoest-DEPProcessingClass.getDseda(vx1[i],vx2[i],vx3[i],y1[i],y2[i],1,K);     // Condiciones iniciales de v
+            dsedaest[i] = DEPProcessingClass.getDseda(vx1[i],vx2[i],vx3[i],y1[i],y2[i],K);        // Condiciones iniciales de dseda estimada
+            vest[i] = zoest-dsedaest[i];                                                            // Condiciones iniciales de v
         }
 
         double[] estimation;                                                                        // Vector que almacenará la estimación.
@@ -130,8 +137,8 @@ public class DEPObserverClass{
                     vx1[i-1],vx2[i-1],vx3[i-1],vx1[i-2],vx2[i-2],vx3[i-2],
                     y1[i-1],y2[i-1],y1[i-2],y2[i-2],
                     y1est[i-1],y2est[i-1],y1est[i-2],y2est[i-2],
-                    vest[i-1],vest[i-2],
-                    1,h,K,
+                    vest[i-1],vest[i-2], dsedaest[i-1],dsedaest[i-2],
+                    h,K,Kz,
                     gx1[i-1],gx2[i-1],gx3[i-1],gx1[i-2],gx2[i-2],gx3[i-2]
                     );                                                                              // Observador de orden completo.
 
@@ -141,6 +148,7 @@ public class DEPObserverClass{
             x3est[i]=estimation[DEP.X3];                                                            // Almacenamos x3
             y1est[i]=estimation[DEP.Y1];                                                            // Almacenamos y1
             y2est[i]=estimation[DEP.Y2];                                                            // Alamcenamos y2
+            dsedaest[i]=estimation[DEP.DSEDA];
         }
     }
 
@@ -182,6 +190,7 @@ public class DEPObserverClass{
         y1est= new double[datalength];
         y2est= new double[datalength];
         vest = new double[datalength];
+        dsedaest = new double[datalength];
         gx1 = new double[datalength];
         gx2 = new double[datalength];
         gx3 = new double[datalength];

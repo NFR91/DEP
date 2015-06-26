@@ -84,7 +84,7 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
 
             imCameraFocalLength =  (double)imCamera.getParameters().getFocalLength()/1000;          // Distancia focal de la cámara en m
 
-            Camera.Size previewSize=imCamera.getParameters().getSupportedPreviewSizes().get(0);     // Obtenemos el tamaño del preview
+            Camera.Size previewSize=imCamera.getParameters().getSupportedPreviewSizes().get(1);     // Obtenemos el tamaño del preview
             imCamera.getParameters().setPreviewSize(previewSize.width,previewSize.height);          // Definimos el tamaño del preview;
 
             imPreviewWidth  =   imCamera.getParameters().getPreviewSize().width;                    // Obtenemos el ancho de la imagen
@@ -178,7 +178,7 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
             if(imDepObject.getObserverObject()!=null)
             {
 
-                DEPProcessingClass.plot2D(imDepObject.getObserverObject().getX2est(),
+                DEPProcessingClass.plot2D(imDepObject.getObserverObject().getX3est(),
                         imDepObject.getObserverObject().getT(),canvas,Color.MAGENTA);
 
 

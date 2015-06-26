@@ -191,38 +191,41 @@ public  class DEPProcessingClass
                                                      double vx1,double vx2, double vx3,
                                                      double y1,double y2,
                                                      double y1est, double y2est,
-                                                     double vest, double fL,double K,
+                                                     double vest, double dsedaest,
+                                                     double K, double Kz,
                                                      double gx1,double gx2, double gx3)
     {
 
-        double alpha = K * (Math.pow((fL*vx1)-(vx3*y1),2) + Math.pow((fL*vx2)-(vx3*y2),2));                 // Calculamos el valor de alpha.
-        double gamma = K * ( (((fL*ax1)-((ax3/2)*y1))*y1) + (((fL*ax2)-((ax3/2)*y2))*y2) );                 // Calculamos el valor de gamma.
-        double dseda = getDseda(vx1, vx2, vx3, y1, y2, fL, K);                                              // Calculamos el valor de dseda.
+        double alpha = K * (Math.pow((vx1)-(vx3*y1),2) + Math.pow((vx2)-(vx3*y2),2));                 // Calculamos el valor de alpha.
+        double gamma = K * ( (((ax1)-((ax3/2)*y1))*y1) + (((ax2)-((ax3/2)*y2))*y2) );                 // Calculamos el valor de gamma.
+        double dseda = getDseda(vx1, vx2, vx3, y1, y2, K);                                              // Calculamos el valor de dseda.
 
        // double a11=0   ,a12=gx3,a13=-gx2,
        //        a21=-gx3,a22=0  ,a23=gx1,
        //        a31=gx2 ,a32=-gx1,a33=0;                                                                     // Generamos la matriz de la velocidad angular.
-        double  a11=0   ,a12=0  ,a13=0,
-                a21=0   ,a22=0  ,a23=0,
-                a31=0   ,a32=-0 ,a33=0;
+        double  a11=0       ,a12=(-gx3)  ,a13=(gx2),
+                a21=(gx3)   ,a22=0       ,a23=(-gx1),
+                a31=(-gx2)  ,a32=(gx1)   ,a33=0;
 
-        double f1 = (fL*a13) + ((a11-a33)*y1) + (a12*y2) - ((a31/fL)*Math.pow(y1,2)) - ((a32/fL)*y1*y2);    // Calculamos el valor de f1.
-        double f2 = (fL*a23) + ((a22-a33)*y2) + (a21*y1) - ((a32/fL)*Math.pow(y2,2)) - ((a31/fL)*y1*y2);    // Calculamos el valor de f2
-        double f3 = -( ((a31/fL)*y1) + ((a32/fL)*y2) + a33);                                                // Calculamos el valor de f3
+        double f1 = (a13) + ((a11-a33)*y1) + (a12*y2) - ((a31)*Math.pow(y1,2)) - ((a32)*y1*y2);    // Calculamos el valor de f1.
+        double f2 = (a23) + ((a22-a33)*y2) + (a21*y1) - ((a32)*Math.pow(y2,2)) - ((a31)*y1*y2);    // Calculamos el valor de f2
+        double f3 = -( ((a31)*y1) + ((a32)*y2) + a33);                                                // Calculamos el valor de f3
 
-        double w1 = ((fL*vx1)-(vx3*y1));                                                                    // valor para facilitar la ecuacuación del observador.
-        double w2 = ((fL*vx2)-(vx3*y2));                                                                    // valor para faclilitar la ecuacuón del observador.
+        double w1 = ((vx1)-(vx3*y1));                                                                    // valor para facilitar la ecuacuación del observador.
+        double w2 = ((vx2)-(vx3*y2));                                                                    // valor para faclilitar la ecuacuón del observador.
 
         double y1error = y1est-y1;                                                                          // Calculamos el error entre la estimación e y1
         double y2error = y2est-y2;                                                                          // Calculamos el error entre la estimacion e y2
+        double dsedaerror=dsedaest-dseda;
 
         double vz = vest + dseda;                                                                           // valor para facilitar la ecuacuón del observador.
 
-        double[] derivates = new double[3];                                                                 // Vector que alamcenará las derivadas.
+        double[] derivates = new double[4];                                                                 // Vector que alamcenará las derivadas.
 
         derivates[DEP.DV]  = (f3 * vz) - (vx3*Math.pow(vz,2)) - (alpha*vz) - (K*w1*f1) - (K*w2*f2) - gamma; // Obtenemos la derivada dv
         derivates[DEP.DY1] = f1 + (w1*vz) - (alpha*y1error);                                                // Obtenemos la derivada dy1
         derivates[DEP.DY2] = f2 + (w2*vz) - (alpha*y2error);                                                // Obtenemos la derivada dy2
+        derivates[DEP.DDESEDA] =(alpha*vz) + (K*w1*f1) + (K*w2*f2) + gamma -(Kz*dsedaerror);
 
         return derivates;                                                                                   // Regresamos las derivadas.
 
@@ -238,27 +241,29 @@ public  class DEPProcessingClass
                                                               double y1est, double y2est,
                                                               double y1estp, double y2estp,
                                                               double vest, double vestp,
-                                                              double fL, double h, double K,
+                                                              double dsedaest, double dsedaestp,
+                                                              double h, double K,double Kz,
                                                               double gx1, double gx2, double gx3,
                                                               double gx1p, double gx2p, double gx3p)
     {
 
-        double[] estimations = new double[6];                                                       // Vector que almacena las estimaciones
+        double[] estimations = new double[7];                                                       // Vector que almacena las estimaciones
 
         double[] dvi = getDerivative(ax1, ax2, ax3, vx1, vx2, vx3, y1, y2, y1est, y2est, vest,
-                fL, K, gx1, gx2, gx3);                                                              // Derivadas en el tiempo t.
+                dsedaest, K,Kz, gx1, gx2, gx3);                                                              // Derivadas en el tiempo t.
 
         double[] dvi1 = getDerivative(ax1p, ax2p, ax3p, vx1p, vx2p, vx3p, y1p, y2p, y1estp,
-                y2estp, vestp, fL, K, gx1p, gx2p, gx3p);                                            // Derivadas en el tiempo t-1
+                y2estp, vestp,dsedaestp, K,Kz, gx1p, gx2p, gx3p);                                            // Derivadas en el tiempo t-1
 
         estimations[DEP.V] = vest + ((dvi[DEP.DV]+dvi1[DEP.DV])*(h/2));                             // Realizamos la estimación de v
         estimations[DEP.Y1]= y1est +((dvi[DEP.DY1]+dvi1[DEP.DY1])*(h/2));                           // Realizamos la estimación de y1
         estimations[DEP.Y2]= y1est +((dvi[DEP.DY2]+dvi1[DEP.DY2])*(h/2));                           // Realizamos la estimación de y2
+        estimations[DEP.DSEDA] = dsedaest + ((dvi[DEP.DDESEDA]+dvi1[DEP.DDESEDA])*(h/2));
 
-        double z = estimations[DEP.V] + getDseda(vx1, vx2, vx3, y1, y2, fL, K);                     // Calculamos z para obtener la estimación de la posición.
+        double z = estimations[DEP.V] + estimations[DEP.DSEDA];                     // Calculamos z para obtener la estimación de la posición.
 
-        estimations[DEP.X1] = estimations[DEP.Y1]/(z*fL);                                           // Calculamos la estimcaión de x1,
-        estimations[DEP.X2] = estimations[DEP.Y2]/(z*fL);                                           // Calculamos la estimación de x2
+        estimations[DEP.X1] = estimations[DEP.Y1]/(z);                                           // Calculamos la estimcaión de x1,
+        estimations[DEP.X2] = estimations[DEP.Y2]/(z);                                           // Calculamos la estimación de x2
         estimations[DEP.X3] = 1/z;                                                                  // Calculamos la estimación de x3
 
         return estimations;                                                                         // Regresamos las estimaciones.
@@ -266,9 +271,9 @@ public  class DEPProcessingClass
     }
 
     /*Esta función calcula el valor de dseda*/
-    static synchronized public double getDseda(double vx1,double vx2,double vx3,double y1,double y2,double fL,double K)
+    static synchronized public double getDseda(double vx1,double vx2,double vx3,double y1,double y2,double K)
     {
-        return K * ( (((fL*vx1)-((vx3/2)*y1))*y1) + (((fL*vx2)-((vx3/2)*y2))*y2) );                 // Regresamos el valor de dseda.
+        return K * ( (((vx1)-((vx3/2)*y1))*y1) + (((vx2)-((vx3/2)*y2))*y2) );                 // Regresamos el valor de dseda.
     }
 
     // Funciones para graficar.*********************************************************************
@@ -311,10 +316,11 @@ public  class DEPProcessingClass
         paint.setColor(color);
         paint.setStrokeWidth(axePlotWidth);
 
-        canvas.drawLine((float) tAxes[DEP.MINAXE],(float) dataAxes[DEP.ZEROAXE],(float) tAxes[DEP.MAXAXE],(float) dataAxes[DEP.ZEROAXE],paint); // eje y
+        canvas.drawLine((float) tAxes[DEP.MINAXE], (float) dataAxes[DEP.MAXAXE], (float) tAxes[DEP.MAXAXE], (float) dataAxes[DEP.MAXAXE], paint); // eje y
         canvas.drawLine((float) tAxes[DEP.ZEROAXE],(float) dataAxes[DEP.MINAXE],(float) tAxes[DEP.ZEROAXE],(float) dataAxes[DEP.MAXAXE],paint); // eje x
 
-        double tickN = (dataMaxVl)/(double)ticks;
+
+
 
         for(int i=0,length=tPxls.length;i<length;i++)
         {
@@ -331,13 +337,18 @@ public  class DEPProcessingClass
             // Colocar los tics;
 
 
-            if( i%((length-1)/ticks)==0.0)
-            {
-                paint.setStrokeWidth(1);
+        }
 
-                canvas.drawText(""+(Math.rint(time[i]*10)/10),(float)tPxls[i],(float)dataAxes[DEP.ZEROAXE],paint);// Eje x
-                canvas.drawText(""+(Math.rint(data[i]*10)/10),(float)tAxes[DEP.ZEROAXE],(float)dataPxls[i],paint);// Eje y
-            }
+        double timestep=((tMaxVl-tMinVl)/ticks);
+        double datastep=((dataMaxVl-dataMinVl)/ticks);
+        for(int i=0;i<=ticks;i++)
+        {
+            double t= tMinVl+(i*timestep);
+            canvas.drawText(""+(Math.rint(t*10)/10),(float) toPixel(t,tMinVl,tMaxVl,(double)tMaxPxls,false),(float)dataAxes[DEP.MAXAXE],paint);
+
+            double d= dataMinVl+ (i*datastep);
+            canvas.drawText(""+(Math.rint(d*100)/100),(float) tAxes[DEP.ZEROAXE],(float) toPixel(d,dataMinVl,dataMaxVl,(double)dataMaxPxls,true),paint);
+
         }
 
 
@@ -421,6 +432,29 @@ public  class DEPProcessingClass
             /* Para cada valor de la serie obtenemos su valor en pixeles, con un márgen de 0.1 */
             for(int i=0; i < serieLength; i++)
                 pxls[i] = (int)Math.round((0.05*maxPxls)+(((serie[i]-min)/(delta))*0.9*maxPxls));
+        }
+
+
+        return pxls; // Regresamos la serie de pixeles
+    }
+
+    static synchronized public int toPixel(double value,double min,double max,double maxPxls,boolean isOrdinate)
+    {
+
+        int pxls = 0;  // Generamos el vector de pixeles de la serie
+
+        // Revisamos si se inverten los ejes;
+        if(isOrdinate)
+        {
+            double delta = min-max;
+
+            pxls = (int)Math.round((0.05*maxPxls)+(((value-max)/(delta))*0.9*maxPxls));
+        }
+        else
+        {
+            double delta= max-min;              // Obtenemos el delta;
+
+            pxls = (int)Math.round((0.05*maxPxls)+(((value-min)/(delta))*0.9*maxPxls));
         }
 
 

@@ -38,8 +38,8 @@ public class DEP extends Activity {
 
     // Variables
     public static final int X=0,Y=1,Z=2;                                    // Constantes de posición de los vectores.
-    public static final int DV=0,DY1=1,DY2=2;
-    public static final int X1=0,X2=1,X3=2,Y1=3,Y2=4,V=5;
+    public static final int DV=0,DY1=1,DY2=2,DDESEDA=3;
+    public static final int X1=0,X2=1,X3=2,Y1=3,Y2=4,V=5,DSEDA=6;
     public static final int DATALENGTH = 24000;                             // Constante de la cantidad máxima de datos que se puede adquirir.
     public static final int CLICKCOLOR = Color.argb(30, 0, 255, 255);       // Constante de color cuando un boton se encuentra selecionado.
     public static final int NORMALCOLOR = Color.argb(30,0,0,0);             // Constante del fondo normal de los botones.
@@ -51,7 +51,7 @@ public class DEP extends Activity {
     public static final String STATUSDATAEST =  "Estimación finalizada";    // Constante que indica que se ha terminado la estimación
     public static final float N2S = 1.0f/1000000000.0f;
     public static final int MINAXE=0,ZEROAXE=1,MAXAXE=2;
-
+    public static final int FILTERSIZE=701;
     /* Cuando se crea la aplicación.*/
     @Override
     protected void onCreate(final Bundle savedInstanceState) {

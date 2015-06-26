@@ -3,8 +3,13 @@ package nieto.depthestimationprojectv0_1;
 
 import android.content.Context;
 import android.os.Environment;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -79,5 +84,51 @@ public class DEPCSVClass {
                 ;
             }
 
+    }
+
+    public static double[] getFilterFromFile(String filtro){
+
+        // Definimos los paths.
+        File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);                   // Obtenemos la dirección del directorio de documentos.
+
+        File filtfile = new File(
+                sdCard.getAbsolutePath() + "/DEP"+"/"+ filtro
+        );                                                                                                              // Creamos la dirección del directorio en el que se guardará el archivo.
+
+        double[] filter = new double[0];
+
+        try {
+            FileReader fr = new FileReader(filtfile);
+
+            filter = new double[DEP.FILTERSIZE];
+            BufferedReader br = new BufferedReader(fr);
+            String linea;
+
+
+            int i=0;
+            while ((linea=br.readLine())!=null)
+            {
+                filter[i] = Double.parseDouble(linea);
+                i++;
+            }
+
+            fr.close();
+
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+        return filter;
+}
+    public static int LinesNo(FileReader filtro) throws IOException {
+        BufferedReader br = new BufferedReader(filtro);
+        String linea;
+        int filtersize=0;
+
+        while ((linea=br.readLine())!=null)
+        {
+            filtersize++;
+        }
+
+        return filtersize;
     }
 }
