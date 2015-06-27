@@ -82,10 +82,13 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
             imCamera = Camera.open();                                                               // Iniciamos la camara.
             imCamera.setPreviewDisplay(imHolder);                                                   // Añadimos el preview al surface
 
-            imCameraFocalLength =  (double)imCamera.getParameters().getFocalLength()/1000;          // Distancia focal de la cámara en m
+           Camera.Parameters imCameraParameters = imCamera.getParameters();
 
-            Camera.Size previewSize=imCamera.getParameters().getSupportedPreviewSizes().get(1);     // Obtenemos el tamaño del preview
-            imCamera.getParameters().setPreviewSize(previewSize.width,previewSize.height);          // Definimos el tamaño del preview;
+            imCameraFocalLength =  (double)imCameraParameters.getFocalLength()/1000;          // Distancia focal de la cámara en m
+
+            Camera.Size previewSize=imCamera.getParameters().getSupportedPreviewSizes().get(3);     // Obtenemos el tamaño del preview
+            imCameraParameters.setPreviewSize(previewSize.width,previewSize.height);
+            imCamera.setParameters(imCameraParameters);         // Definimos el tamaño del preview;
 
             imPreviewWidth  =   imCamera.getParameters().getPreviewSize().width;                    // Obtenemos el ancho de la imagen
             imPreviewHeight =   imCamera.getParameters().getPreviewSize().height;                   // Obtenemos el alto de la imagen
@@ -298,12 +301,26 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
     public int[] getImRoiMassCenter()
     {
         int[] masscenter = new int[2];                                                              // Definimos un centro de masa que va a regresarse.
-        masscenter[DEP.X] = imRoiMassCenter[DEP.X]-(imFullRoiWidth/2);                              // Cambiamos el origen de coordenadas al centro de la imagen.
-        masscenter[DEP.Y] = imRoiMassCenter[DEP.Y]-(imFullRoiHeight/2);                             // Cambiamos el origen de coordenadas al centro de la imagen.
+        masscenter[DEP.X] = imRoiMassCenter[DEP.X];
+        masscenter[DEP.Y] = imRoiMassCenter[DEP.Y];
 
         return masscenter;                                                                          // Regresamos el centro de masa con el origen de coordenadas ene el centro de la imagen.
     }
 
+    public int getImPreviewWidth()
+    {
+        return imPreviewWidth;
+
+    }
+    public int getImPreviewHeight()
+    {
+        return imPreviewHeight;
+    }
+
+    public double getFocalLength()
+    {
+        return imCameraFocalLength;
+    }
     // Métodos *************************************************************************************
 
     /* Algoritmo de seguimiento del objeto en la imagen.*/

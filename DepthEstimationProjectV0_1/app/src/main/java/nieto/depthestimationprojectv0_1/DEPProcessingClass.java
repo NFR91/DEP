@@ -122,6 +122,7 @@ public  class DEPProcessingClass
             return newCoordinates;                                                                  // Regresamos el vector que contiene las nvas coordenadas.
     }
 
+
     // Funciones del estimador *********************************************************************
 
     /* Aplicamos el filtro FIR especificado */
@@ -182,6 +183,51 @@ public  class DEPProcessingClass
         }
 
         return integratedDATA;                                                                      // Regresamos la integral del vector data.
+    }
+
+    static synchronized public double[] getNewRotationMatrix(double gx1,double gx2,double gx3,double h)
+    {
+        double [] Gx = new double[9];
+
+        double gx1h = gx1*h, gx2h = gx2*h, gx3h = gx3*h;
+
+        Gx[0] =   1;   Gx[1] = -gx3h; Gx[2] =  gx2h;
+        Gx[3] =  gx3h; Gx[4] =   1;   Gx[5] = -gx1h;
+        Gx[6] = -gx2h; Gx[7] =  gx1h; Gx[8] =    1;
+
+        return Gx;
+
+    }
+
+    static synchronized public double[] getCurrentRotationMatrix(double[] pr, double[] nr)
+    {
+        double [] cr = new double[9];
+
+        cr[0] = (pr[0]*nr[0]) + (pr[1]*nr[3]) + (pr[2]*nr[6]);
+        cr[1] = (pr[0]*nr[1]) + (pr[1]*nr[4]) + (pr[2]*nr[7]);
+        cr[2] = (pr[0]*nr[2]) + (pr[1]*nr[5]) + (pr[2]*nr[8]);
+
+        cr[3] = (pr[3]*nr[0]) + (pr[4]*nr[3]) + (pr[5]*nr[6]);
+        cr[4] = (pr[3]*nr[1]) + (pr[4]*nr[4]) + (pr[5]*nr[7]);
+        cr[5] = (pr[3]*nr[2]) + (pr[4]*nr[5]) + (pr[5]*nr[8]);
+
+        cr[6] = (pr[6]*nr[0]) + (pr[7]*nr[3]) + (pr[8]*nr[6]);
+        cr[7] = (pr[6]*nr[1]) + (pr[7]*nr[4]) + (pr[8]*nr[7]);
+        cr[8] = (pr[6]*nr[2]) + (pr[7]*nr[5]) + (pr[8]*nr[8]);
+
+        return cr;
+    }
+
+    static synchronized public double[] rotate(double[] r, double vl1 ,double vl2, double vl3)
+    {
+        double [] vl = new double[3];
+
+        vl[0] = (r[0]*vl1) + (r[1]*vl2) + (r[2]*vl3);
+        vl[1] = (r[3]*vl1) + (r[4]*vl2) + (r[5]*vl3);
+        vl[2] = (r[6]*vl1) + (r[7]*vl2) + (r[8]*vl3);
+
+        return vl;
+
     }
 
     // Funciones del observador de orden completo***************************************************

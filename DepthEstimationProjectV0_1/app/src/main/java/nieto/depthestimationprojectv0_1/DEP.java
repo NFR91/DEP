@@ -142,11 +142,19 @@ public class DEP extends Activity {
                     // Empleamos un try_catch para adquirir cualquier evento que se de durante el procesamiento de la infromación.
                     try{
 
+                        double ppm = 0.0062976/((double)imageObject.getImPreviewWidth());
+
                         observerObject = new DEPObserverClass(
-                                sensorObject.getxAccel(), sensorObject.getyAccel(),sensorObject.getzAccel(),
-                                sensorObject.getxGyro(),  sensorObject.getyGyro(),sensorObject.getzGyro(),
+                                sensorObject.getxAccel(),sensorObject.getyAccel(),sensorObject.getzAccel(),
+                                sensorObject.getxGyro(),sensorObject.getyGyro(),sensorObject.getzGyro(),
                                 sensorObject.getImYX(),sensorObject.getImYY(),
-                                sensorObject.getTime());                                            // Creamos el objeto que procesa la estimación.
+                                sensorObject.getTime(),
+                                (double)imageObject.getImPreviewHeight()/2,
+                                (double)imageObject.getImPreviewWidth()/2,
+                                imageObject.getFocalLength(),
+                                ppm
+
+                        );
 
                         observerObject.estimateCoordinates();                                       // Estimamos las coordenadas.
                     } catch (Exception e)

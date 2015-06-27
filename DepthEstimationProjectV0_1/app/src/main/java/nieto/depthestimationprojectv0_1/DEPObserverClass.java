@@ -19,15 +19,12 @@ public class DEPObserverClass{
     private double  [] gx1,gx2,gx3;                                                                 // Gyroscopio filtrado.
     private double  [] y1,y2;                                                                       // Proyección cruda.
     private double  [] t;                                                                           // tiempo
-    private double fL=0.0049;                                                                       // distancia focal
     private double h;                                                                               // Paso del tiempo
-    private double pixelpermeter= 0.00000984;                                                       // pixeles por metro.
-    private double y1c=480/2,y2c=640/2;
     private double [] hpfilter,lpfilter;
     // Filtros ver final del documento.
 
     /*Constructor de la calse*/
-    public DEPObserverClass(float[]xAccel, float[]yAccel,float[]zAccel,float[]xGyro,float[]yGyro,float[]zGyro,int[]yX,int[]yY,float[]time)
+    public DEPObserverClass(float[]xAccel, float[]yAccel,float[]zAccel,float[]xGyro,float[]yGyro,float[]zGyro,int[]yX,int[]yY,float[]time,double y1c,double y2c,double fL,double ppm)
     {
         int datalength = 1;                                                                         // Vamos a obtener el tamaño real de los vecotres.
 
@@ -46,8 +43,8 @@ public class DEPObserverClass{
             gx1RAW[i] = (double)xGyro[i];                                                           // Velocidad angular en x1
             gx2RAW[i] = -(double)yGyro[i];                                                           // Velocidad angular en x2
             gx3RAW[i] = -(double)zGyro[i];                                                           // Velocidad angular en x3
-            y1[i]  = -(-(double)yY[i]+ y1c) * (pixelpermeter/fL);                                         // Projección en metros en y1.
-            y2[i]  = -((double)yX[i]- y2c) * (pixelpermeter/fL);                                                 // Projección en metros en y2.
+            y1[i]  = -(-(double)yY[i]+ y1c) * (ppm/fL);                                         // Projección en metros en y1.
+            y2[i]  = -((double)yX[i]- y2c) * (ppm/fL);                                                 // Projección en metros en y2.
             t[i]   = (double)time[i];                                                               // tiempo.
         }
 
@@ -106,7 +103,7 @@ public class DEPObserverClass{
 
         double zoest = 1;                                                       // Estimación inicial de x3
         double K=50;                                                                  // Constante convergencia.
-        double Kz=10;
+        double Kz=2;
 
         // Obtenemos las condiciones iniciales.
         for (int i=0;i<3;i++)
@@ -153,18 +150,6 @@ public class DEPObserverClass{
     }
 
     // Setter ***************************************************************************************
-
-    /*Definimos la distancia focal.*/
-    public void setFocalLength(double focalLength)
-    {
-        fL=focalLength;                                                                             // Definimos la distancia focal.
-    }
-
-    /*Definimos los pixeles por metro.*/
-    public void setPixelpermeter(double ppm)
-    {
-        pixelpermeter = ppm;                                                                        // Definimos los pixeles por metro.
-    }
 
     /*Iniciamos en ceros los datos.*/
     public void resetDATA(int datalength)
