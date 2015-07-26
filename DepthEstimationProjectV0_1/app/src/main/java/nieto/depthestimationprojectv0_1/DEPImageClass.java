@@ -182,7 +182,10 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
             {
 
                 DEPProcessingClass.plot2D(imDepObject.getObserverObject().getX3est(),
-                        imDepObject.getObserverObject().getT(),canvas,Color.MAGENTA);
+                        imDepObject.getObserverObject().getT(),canvas,Color.BLUE);
+                //DEPProcessingClass.plot2D(imDepObject.getObserverObject().getX2est(),imDepObject.getObserverObject().getT(),canvas,Color.GREEN);
+                //DEPProcessingClass.plot2D(imDepObject.getObserverObject().getX1est(),imDepObject.getObserverObject().getT(),canvas,Color.RED);
+
 
 
             }

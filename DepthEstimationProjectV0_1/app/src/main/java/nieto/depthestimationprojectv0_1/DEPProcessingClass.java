@@ -324,6 +324,7 @@ public  class DEPProcessingClass
 
     // Funciones para graficar.*********************************************************************
 
+
     static synchronized public void plot2D(double[] data, double[] time, Canvas canvas,int color)
     {
 
