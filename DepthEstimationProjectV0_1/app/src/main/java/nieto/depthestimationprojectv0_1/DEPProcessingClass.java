@@ -43,8 +43,126 @@ public  class DEPProcessingClass
 
     }
 
+    /*Convertimos obtenemos el histograma inverso*/
+    static synchronized public double[] setBckHistogramHSI(Bitmap image, double[] hsi) {
+        int width = image.getWidth(), height = image.getHeight();                                    // Obtenemos las dimensiones de la imagen
+        int pos = 0, imPix = 0;                                                                        // Constante de posición y almacenador del pixel a procesar, posición en el histograma.
+
+        int[] imPixels = new int[width * height];                                                    // Buffer de la imagen.
+        image.getPixels(imPixels, 0, width, 0, 0, width, height);                                  // Obtenemos la imagen a partir del bitmap.
+
+        double[] bckhist = new double[width*height];
+        double r, g, b, minrgb = 0, h, s, i;                                                               // Valores de rojo, verde, azul, y tono,saturación e intensidad.
+        int histpos = 0;                                                                             // posición en el histograma.
+        double ph=0,pi=0,ps=0;
+
+        // Recorremos la imagen de arriba a abajo y de izquierda a derecha.
+
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+
+                pos = x + (y * width);                                                                 // Posición en la imagen.
+                imPix = imPixels[pos];                                                             // Valor del pixel RGB
+
+                r = ((double) ((imPix >> 16) & 0xFF)) / 256.0;                                            // Obtenemos el valor del rojo normalizado
+                g = ((double) ((imPix >> 8) & 0xFF)) / 256.0;                                             // Obtenemos el valor del verde normlizado
+                b = ((double) ((imPix >> 0) & 0xFF)) / 256.0;                                             // Obtenemos el valor del azul normalizado.
+
+                minrgb = (r < g) ? ((r < b) ? r : ((g < b) ? g : b)) : ((g < b) ? g : b);                      // Obtenemos el valor minimo de los tres
+
+                i = (r + g + b)/3;                                                                 // Intensidad
+
+                s = (i==0) ? 0 : ( (1-((3*minrgb)/(r+g+b)) ));                                       // Saturación, se realiza una comparación para saber si la intensidad es cero.
+
+                // El tono no esta definido cuando la saturación es cero.
+                if (s == 0)
+                    h = 0;
+                else
+                    h = Math.toDegrees(Math.acos(((0.5) * ((2 * r) - g - b)) / Math.sqrt(Math.pow((r - g), 2) + ((r - b) * (g - b)))));
+
+                h = (b > g) ? (1 - (h / 360)) : (h / 360);                                                 // Si b>g se realiza una h=360-h;
+
+                histpos = ( (int)Math.rint(h*DEP.HISTBIN) )+(DEP.H*DEP.HISTBIN);                 // Obtenemos la posición del valor del pixel en el histograma y le asginamos en base a su posición en la imagen.
+                ph = hsi[histpos] ;
+
+                histpos = ( (int)Math.rint(s*DEP.HISTBIN))+(DEP.S*DEP.HISTBIN);                 // Obtenemos la posición del valor del pixel en el histograma y le asginamos en base a su posición en la imagen.
+                ps = hsi[histpos] ;
+
+                histpos = ( (int)Math.rint(i*DEP.HISTBIN))+(DEP.I*DEP.HISTBIN);                 // Obtenemos la posición del valor del pixel en el histograma y le asginamos en base a su posición en la imagen.
+                pi = hsi[histpos] ;
+
+
+                bckhist[pos] = ph*pi*ps;
+            }
+
+        return bckhist;
+    }
+
+    /*Obtenemos los histogramas del objeto.*/
+     static synchronized public double[] getObjectHSIHistogram(Bitmap image)
+     {
+         int width = image.getWidth(), height=image.getHeight();                                    // Obtenemos las dimensiones de la imagen
+         int pos=0, imPix=0;                                                                        // Constante de posición y almacenador del pixel a procesar, posición en el histograma.
+
+         int[] imPixels = new int[width*height];                                                    // Buffer de la imagen.
+         image.getPixels(imPixels, 0, width, 0, 0, width, height);                                  // Obtenemos la imagen a partir del bitmap.
+
+         double k=0.0,sx=0.7*width, sy=0.7*height,xo=width/2,yo=height/2;                           // Propiedades del peso espacial e^()
+         double[] hsi= new double[3*DEP.HISTBIN] ;                                                  // Vector que almacena el histograma hsv.
+         double r,g,b,minrgb=0,h,s,i;                                                               // Valores de rojo, verde, azul, y tono,saturación e intensidad.
+         int histpos=0;                                                                             // posición en el histograma.
+
+         // Recorremos la imagen de arriba a abajo y de izquierda a derecha.
+
+         for (int y= 0; y < height ; y++)
+             for(int x=0; x < width  ; x++)
+             {
+                 pos = x+(y*width);                                                                 // Posición en la imagen.
+                 imPix = imPixels[pos];                                                             // Valor del pixel RGB
+                 k = Math.exp(-( (Math.pow((x-xo),2)/sx) + (Math.pow(y-yo,2)/sy)  ));               // Valor del Kernel para la posición del pixel.
+
+                 r = ((double)((imPix>>16)&0xFF))/256.0;                                            // Obtenemos el valor del rojo normalizado
+                 g = ((double)((imPix>>8)&0xFF))/256.0;                                             // Obtenemos el valor del verde normlizado
+                 b = ((double)((imPix>>0)&0xFF))/256.0;                                             // Obtenemos el valor del azul normalizado.
+
+                 minrgb = (r<g) ? ((r<b) ? r: ((g<b)? g: b)) : ((g<b) ? g: b);                      // Obtenemos el valor minimo de los tres
+
+                 i = (r+g+b)/3;                                                                 // Intensidad
+
+                 s = (i==0) ? 0 : ( (1-((3*minrgb)/(r+g+b)) ));                                       // Saturación, se realiza una comparación para saber si la intensidad es cero.
+
+                 // El tono no esta definido cuando la saturación es cero.
+                 if (s==0)
+                  h= 0;
+                 else
+                     h = Math.toDegrees(Math.acos(((0.5) * ((2 * r) - g - b)) / Math.sqrt(Math.pow((r - g), 2) + ((r - b) * (g - b)))));
+
+                 h = (b>g) ? (1-(h/360)) : (h/360);                                                 // Si b>g se realiza una h=360-h;
+
+
+
+                 histpos = ( (int) Math.rint(h*DEP.HISTBIN) )+(DEP.H*DEP.HISTBIN);                 // Obtenemos la posición del valor del pixel en el histograma y le asginamos en base a su posición en la imagen.
+                 hsi[histpos] = hsi[histpos] + k;
+
+                 histpos = ( (int)Math.rint(s*DEP.HISTBIN) )+(DEP.S*DEP.HISTBIN);                 // Obtenemos la posición del valor del pixel en el histograma y le asginamos en base a su posición en la imagen.
+                 hsi[histpos] = hsi[histpos] + k;
+
+                 histpos = ( (int)Math.rint(i*DEP.HISTBIN) )+(DEP.I*DEP.HISTBIN);                 // Obtenemos la posición del valor del pixel en el histograma y le asginamos en base a su posición en la imagen.
+                 hsi[histpos] = hsi[histpos] + k;
+
+             }
+
+         for (int vl=0, l=hsi.length,events=(3*width*height); vl<l; vl++)
+             hsi[vl]= hsi[vl]/(events);                                                             // Normalizamos los histogramas para obtener un área =1/3 para cada uno de forma que  h+s+i=1;
+
+
+         return hsi;
+
+
+     }
+
     /*Obtenemos la projección inversa a partir del bitmap*/
-    static synchronized public int[] setBckHistohram(Bitmap image)
+    static synchronized public int[] setBckHistogram(Bitmap image)
     {
         int width = image.getWidth(), height = image.getHeight();                                   // Obtenemos la dimensiones
         int pos=0,gray=0,imPix=0;                                                                   // Constantes de posición y de la escala de grises y almacenador del pixel.
@@ -107,6 +225,45 @@ public  class DEPProcessingClass
 
         massCenter[DEP.X]=(int) Math.round(M01/M00) + xo;                                           // Coordenada X
         massCenter[DEP.Y]=(int) Math.round(M10/M00) + yo;                                           // Coordenada Y
+
+        return massCenter;                                                                          // Regresamos el vector que contiene el centro de masa.
+    }
+
+    /* Calculamos el centro de masa de la imagen */
+    static synchronized public int[] setMassCenter(double[] imBckPrj,int width, int height, int xo, int yo)
+    {
+        /*********************************************************************************************
+         * Función que calcula el centro de masa de la imagen de probabilidades
+         *
+         * Toma como argumento la imagen de probabilidades y regresa las coordenadas del centro de masa.
+         * En un arreglo [y,x];
+         *
+         * El centro de masa se calcula como
+         *
+         * rc = (∑ m(i)*r(i))/(∑m(i))
+         *********************************************************************************************/
+
+        // Variables
+        double      M00=0.0, M10 = 0.0, M01=0.0;                                                    // Inicializamos los momentos
+        int pos=0;                                                                                  // posición del pixel
+        int[] massCenter = new int[2];                                                              // Vector que del centro de masa.
+
+        // Para cada pixel del histograma obtenemos los momentos
+        for ( Integer y=0; y < height; y++)
+            for(Integer x=0; x< width; x++)
+            {
+                pos = x +(y*width);                                                                 // Obtenemos la posición del pixel.
+
+                M00 += imBckPrj[pos];                                                          //m(i)
+                M01 += imBckPrj[pos] *x;                                                       //m(i)*r(i)
+                M10 += imBckPrj[pos] *y;                                                       //m(i)*r(i)
+            }
+
+        // Con estos momentos calculamos el centro de masa
+
+
+        massCenter[DEP.X]=(int) Math.round((M01/M00)) + xo;                                           // Coordenada X
+        massCenter[DEP.Y]=(int) Math.round((M10/M00)) + yo;                                           // Coordenada Y
 
         return massCenter;                                                                          // Regresamos el vector que contiene el centro de masa.
     }

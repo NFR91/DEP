@@ -8,6 +8,7 @@ package nieto.depthestimationprojectv0_1;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -44,8 +45,8 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
     private     int[]                   imRoiNewCoordinate;                                                                         // Nuevas coordenadas
     private     int []                  imBckPrjHist;                                                                               // BackProjection de la roi.
     private     boolean                 imIsPlotting;                                                                               // Bandera oara saber si se esta graficando la estimación.
-
-
+    private     double[]                imObjectHSIHistogram;                                                                       // Histograma el objeto
+    private     double[]                imBckPrjHistHSI;
     // Objetos
     private     Camera                  imCamera;                                                   // Objeto de la Camara.
     private     ScaleGestureDetector    imScaleDetector;                                            // Objeto para redimensionar la región de interes.
@@ -110,6 +111,7 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
         imPaint.setColor(Color.WHITE);                                                              // Color del paint
 
 
+
         // Definimos la roi centrada en la superficie.
         imRoiWidth =   imRoiHeight =   100;                                                         // Tamaño inicial de la roi.
         imRoiXo = Math.round((this.getWidth()-imRoiWidth)/2);                                       // Obtenemos la posición de xo
@@ -161,17 +163,11 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
         // Revisamos si se esta graficando
         if(!imIsPlotting)
         {
-            // Si no se esta graficnado
 
-            // revisamos si se esta procesando la imagen mostramos la projección inversa.
-            if (imBmpRoi!=null && imIsProcessing)
-            {
-                canvas.drawBitmap(Bitmap.createScaledBitmap(imBmpRoi,imRoiWidth,imRoiHeight,false),
-                        imRoiXo,imRoiYo,imPaint);                                                       // Dibujamos el recuadro.
-            }
-
-            // Dibujamos las lineas guia para obtener el objeto.
-            canvas.drawRect(imRoi, imPaint);                                                            // Dibujamos la roi
+                    // Dibujamos las lineas guia para obtener el objeto.
+            imPaint.setStrokeWidth(5f);
+            canvas.drawRect(imRoi,imPaint );                                                            // Dibujamos la roi
+            imPaint.setStrokeWidth(1f);
             canvas.drawLine(this.getWidth()/2,0,this.getWidth()/2,this.getHeight(),imPaint);            // Dibujamos una linea vetical que pase por el centro.
             canvas.drawLine(0,this.getHeight()/2,this.getWidth(),this.getHeight()/2,imPaint);           // Dibujamos una linea horizoantal que pase por el centro.
         }
@@ -235,9 +231,10 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
                     imBmpRoi = DEPProcessingClass.setBitmapFromYUV(bytes,imFullRoi,imPreviewWidth,
                             imPreviewHeight);                                                           // Convertimos la imagen de YUV a JPEG
 
-                    imBckPrjHist = DEPProcessingClass.setBckHistohram(imBmpRoi);                        // Obtenemos el historial inverso a partir de la región de interes de la imagen.
+                    imObjectHSIHistogram = DEPProcessingClass.getObjectHSIHistogram(imBmpRoi);
+                    imBckPrjHistHSI = DEPProcessingClass.setBckHistogramHSI(imBmpRoi,imObjectHSIHistogram);                        // Obtenemos el historial inverso a partir de la región de interes de la imagen.
 
-                    imRoiMassCenter=DEPProcessingClass.setMassCenter(imBckPrjHist,imBmpRoi.getWidth(),
+                    imRoiMassCenter=DEPProcessingClass.setMassCenter(imBckPrjHistHSI,imBmpRoi.getWidth(),
                             imBmpRoi.getHeight(),imFullRoiXo,imFullRoiYo);                              // Obtenemos el centro de masa de la imagen.
                 }
                 // Si es el procesado de la imagen.
@@ -339,10 +336,11 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
                     imPreviewHeight);                                                               // Convertimos la imagen  a JPEG
              /*Al realizar la conversión de la imagen a jpg estamos perdiendo una fila (imroiheight-1)*/
 
-            imBckPrjHist = DEPProcessingClass.setBckHistohram(imBmpRoi);                            // Obtenemos la projección inversa.
 
-            imRoiMassCenter=DEPProcessingClass.setMassCenter(imBckPrjHist,imBmpRoi.getWidth(),
-                    imBmpRoi.getHeight(),imFullRoiXo,imFullRoiYo);                                  // Obtenemos el centro de masa de la imagen.
+            imBckPrjHistHSI = DEPProcessingClass.setBckHistogramHSI(imBmpRoi, imObjectHSIHistogram);                        // Obtenemos el historial inverso a partir de la región de interes de la imagen.
+
+            imRoiMassCenter=DEPProcessingClass.setMassCenter(imBckPrjHistHSI,imBmpRoi.getWidth(),
+                    imBmpRoi.getHeight(),imFullRoiXo,imFullRoiYo);                              // Obtenemos el centro de masa de la imagen.
 
             imRoiNewCoordinate = DEPProcessingClass.setNewCoordinates(imRoiMassCenter,
                     imFullRoiXCenter,imFullRoiYCenter);                                             // Definimos las nuevas coordenadas.
@@ -350,8 +348,7 @@ public class DEPImageClass extends SurfaceView implements SurfaceHolder.Callback
             this.setGuiRoi(imRoiNewCoordinate[DEP.X],imRoiNewCoordinate[DEP.Y]);                    // Definimos la nueva posición de la roi de la GUI.
         }
 
-        imBmpRoi = Bitmap.createBitmap(imBckPrjHist,imBmpRoi.getWidth(),imBmpRoi.getHeight(),
-                Bitmap.Config.RGB_565);                                                             // Mostramos el procesado.
+        //imBmpRoi = Bitmap.createBitmap(imBckPrjHist,imBmpRoi.getWidth(),imBmpRoi.getHeight(), Bitmap.Config.RGB_565);                                                             // Mostramos el procesado.
     }
 
     // Clases **************************************************************************************

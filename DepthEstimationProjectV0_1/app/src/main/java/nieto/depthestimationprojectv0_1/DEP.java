@@ -1,7 +1,10 @@
 package nieto.depthestimationprojectv0_1;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,16 +33,17 @@ public class DEP extends Activity {
     private TextView statusText;                    // Barra de estado que muestra el proceso que se realiza.
     private Button estimateButton;                  // Boton para realizar la estimación de la profundidad.
     private ToggleButton plotToggleButton;          // Boton para realizar el plotting.
+    private Button infoButton;                      // Boton de créditos;
 
     //Objetos
     private DEPImageClass imageObject;              // Objeto que maneja el procesamiento y despliegue de la imagen.
     private DEPSensorClass sensorObject;            // Objeto que maneja la adquisición de los datos de los sensores inerciales.
     private DEPObserverClass observerObject;        // Objeto del observador.
-
+    private DEP             depObject;              // Objeto de la apliocación
     // Variables
     public static final int X=0,Y=1,Z=2;                                    // Constantes de posición de los vectores.
-    public static final int DV=0,DY1=1,DY2=2,DDESEDA=3;
-    public static final int X1=0,X2=1,X3=2,Y1=3,Y2=4,V=5,DSEDA=6;
+    public static final int DV=0,DY1=1,DY2=2,DDESEDA=3;                     // Constantes de posicion del vector de derivadas.
+    public static final int X1=0,X2=1,X3=2,Y1=3,Y2=4,V=5,DSEDA=6;           // Constantes de posición en el vector resultado.
     public static final int DATALENGTH = 24000;                             // Constante de la cantidad máxima de datos que se puede adquirir.
     public static final int CLICKCOLOR = Color.argb(30, 0, 255, 255);       // Constante de color cuando un boton se encuentra selecionado.
     public static final int NORMALCOLOR = Color.argb(30,0,0,0);             // Constante del fondo normal de los botones.
@@ -49,9 +53,15 @@ public class DEP extends Activity {
     public static final String STATUSSAVED   =  "Datos guardados";          // Constante que indica que se han guardado los datos.
     public static final String STATUSESTDATA =  "Estimando...";             // Constante que indica que se esta realizando la estimación de la profundidad.
     public static final String STATUSDATAEST =  "Estimación finalizada";    // Constante que indica que se ha terminado la estimación
-    public static final float N2S = 1.0f/1000000000.0f;
-    public static final int MINAXE=0,ZEROAXE=1,MAXAXE=2;
+    public static final float N2S = 1.0f/1000000000.0f;                     // Constante para transformar de nanosegundos a segundos.
+    public static final int MINAXE=0,ZEROAXE=1,MAXAXE=2;                    // Constantes para las coordenadas de los ejes de la gráfica.
+    public static final int H=0,S=1,I=2;                                    // Constantes de las posiciones de los vectores del histograma hsi
+    public static final int HISTBIN=100;                                    // Divisiones del histograma.
+    public static final double CCDACTIVESURFACESIZE=0.0062976;              // Tamaño del área activa del sensor de la cámara.
+
     public static final int FILTERSIZE=701;
+
+    public  final Context context=this;
     /* Cuando se crea la aplicación.*/
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -75,6 +85,7 @@ public class DEP extends Activity {
         startStopToggleButton   =   (ToggleButton) findViewById(R.id.startStopToggleButton);        // Botton para iniciar/parar la adquisición de datos.
         estimateButton          =   (Button) findViewById(R.id.estimateButton);                     // Boton para realizar la estimación de los datos.
         plotToggleButton        =   (ToggleButton) findViewById(R.id.plotToggleButton);             // Boton para graficar.
+        infoButton              =   (Button) findViewById(R.id.infoButton);                         // Boton de infromaicón de la aplicación
 
         // TextView
         statusText              =  (TextView) findViewById(R.id.statusText);                        // TextView para mostrar el estado de la aplicación.
@@ -142,7 +153,7 @@ public class DEP extends Activity {
                     // Empleamos un try_catch para adquirir cualquier evento que se de durante el procesamiento de la infromación.
                     try{
 
-                        double ppm = 0.0062976/((double)imageObject.getImPreviewWidth());
+                        double ppm = DEP.CCDACTIVESURFACESIZE/((double)imageObject.getImPreviewWidth());
 
                         observerObject = new DEPObserverClass(
                                 sensorObject.getxAccel(),sensorObject.getyAccel(),sensorObject.getzAccel(),
@@ -184,6 +195,36 @@ public class DEP extends Activity {
                 }
             }
         });
+
+        // Desplegamos la informacion de la aplicación
+        infoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+
+            public void onClick(View v) {
+
+                AlertDialog alertDialog = new AlertDialog.Builder(context,AlertDialog.THEME_HOLO_DARK).create();
+                alertDialog.setTitle(" Depth Estimation Project");
+                alertDialog.setMessage( "Versión: 0.1"+
+                        "\nAplicación para estimar la distancia a un objeto  mediante la dinámica del dispositivo, empleando" +
+                        "el observador planteado en :\n\n" +
+                        "Ileana Grave and Yu Tang, " +
+                        "\"A New Observer for Perspective Vision Systems Under Noisy Measurements," +
+                        "\"Automatic Control, IEEE Transactions on, vol. 60, no. 2, pp. 503-508, 2015"+
+                                "\n\nRicardo Nieto Fuentes \n" +
+                                "Centro de Física Aplicada y Tecnología Avanzada, UNAM Campus Juriquilla, Querétaro \n" +
+                                "2015");
+
+
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                alertDialog.show();
+            }
+        });
+
 
 
         // *****************************************************************************************
