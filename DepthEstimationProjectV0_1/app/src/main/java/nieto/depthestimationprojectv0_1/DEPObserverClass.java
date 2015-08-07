@@ -41,9 +41,13 @@ public class DEPObserverClass{
             ax1RAW[i] = -(double)xAccel[i];                                                          // Aceleración en x1
             ax2RAW[i] = (double)yAccel[i];                                                          // Aceleración en x2
             ax3RAW[i] = (double)zAccel[i];                                                          // Aceleración en x3
+
+
             gx1RAW[i] = -(double)xGyro[i];                                                           // Velocidad angular en x1
             gx2RAW[i] = (double)yGyro[i];                                                           // Velocidad angular en x2
             gx3RAW[i] = (double)zGyro[i];                                                           // Velocidad angular en x3
+
+
             y1[i]  = -((double)yY[i]-y1c)*(ppm/fL);                                         // Projección en metros en y1.
             y2[i]  = ((double)yX[i]-y2c)*(ppm/fL);                                                 // Projección en metros en y2.
             t[i]   = (double)time[i];

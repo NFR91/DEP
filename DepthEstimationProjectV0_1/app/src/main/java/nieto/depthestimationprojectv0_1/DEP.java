@@ -2,7 +2,6 @@ package nieto.depthestimationprojectv0_1;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
@@ -10,7 +9,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -18,9 +16,6 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
-
-import java.awt.font.TextAttribute;
-import java.io.FileReader;
 
 /* Esta es la clase principal, en la cual se va a manejar la interfase gráfica del programa DEP */
 
@@ -31,8 +26,8 @@ public class DEP extends Activity {
     private Button saveButton;                      // Boton para salvar la información.
     private ToggleButton startStopToggleButton;     // Boton para realizar la adquisición de datos.
     private TextView statusText;                    // Barra de estado que muestra el proceso que se realiza.
-    private Button estimateButton;                  // Boton para realizar la estimación de la profundidad.
-    private ToggleButton plotToggleButton;          // Boton para realizar el plotting.
+    private ToggleButton estimateToggleButton;                  // Boton para realizar la estimación de la profundidad.
+    private ToggleButton calibrateToggleButton;          // Boton para realizar el plotting.
     private Button infoButton;                      // Boton de créditos;
 
     //Objetos
@@ -83,8 +78,9 @@ public class DEP extends Activity {
         // Buttons
         saveButton              =   (Button) findViewById(R.id.saveButton);                         // Boton para salvar.
         startStopToggleButton   =   (ToggleButton) findViewById(R.id.startStopToggleButton);        // Botton para iniciar/parar la adquisición de datos.
-        estimateButton          =   (Button) findViewById(R.id.estimateButton);                     // Boton para realizar la estimación de los datos.
-        plotToggleButton        =   (ToggleButton) findViewById(R.id.plotToggleButton);             // Boton para graficar.
+        estimateToggleButton    =   (ToggleButton) findViewById(R.id.estimateToggleButton);         // Boton para realizar la estimación de los datos.
+        calibrateToggleButton =   (ToggleButton) findViewById(R.id.calibrateToggleButton);             // Boton para graficar.
+        calibrateToggleButton.setVisibility(View.INVISIBLE);
         infoButton              =   (Button) findViewById(R.id.infoButton);                         // Boton de infromaicón de la aplicación
 
         // TextView
@@ -99,7 +95,7 @@ public class DEP extends Activity {
         startStopToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(startStopToggleButton.isChecked() && !plotToggleButton.isChecked())
+                if(startStopToggleButton.isChecked() && !calibrateToggleButton.isChecked())
                 {
                     sensorObject.resetData();                                                       // Borramos la información de los datos.
 
@@ -142,17 +138,17 @@ public class DEP extends Activity {
         });
 
         // Realizamos la estimación de posición.
-        estimateButton.setOnClickListener(new View.OnClickListener() {
+        estimateToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                if(!startStopToggleButton.isChecked())
+                // Si no esta realizandose procesamiento
+                if(!startStopToggleButton.isChecked()&&estimateToggleButton.isChecked())
                 {
                     statusText.setText(STATUSESTDATA);                                              // Mostramos en el statusbar que vamos a realizar la estimación.
 
                     // Empleamos un try_catch para adquirir cualquier evento que se de durante el procesamiento de la infromación.
-                    try{
-
+                    try {
                         double ppm = DEP.CCDACTIVESURFACESIZE/((double)imageObject.getImPreviewWidth());
 
                         observerObject = new DEPObserverClass(
@@ -166,33 +162,27 @@ public class DEP extends Activity {
                                 ppm
 
                         );
-
                         observerObject.estimateCoordinates();                                       // Estimamos las coordenadas.
                     } catch (Exception e)
                     {
                         Log.d("Error",e.toString());
                     }
                     statusText.setText(STATUSDATAEST);                                              // Mostramos que se ha terminado de realizar la estimación.
+                    imageObject.setImIsPlotting(true);
+                }
+                else
+                {
+                    imageObject.setImIsPlotting(false);
                 }
 
             }
         });
 
         // Realizamos el plotting
-        plotToggleButton.setOnClickListener(new View.OnClickListener() {
+        calibrateToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(plotToggleButton.isChecked() && !startStopToggleButton.isChecked())
-                {
-                    imageObject.setImIsPlotting(true);
-                }
-                else
-                {
-                    imageObject.setImIsPlotting(false);
 
-                    if(startStopToggleButton.isChecked())
-                        plotToggleButton.setChecked(false);
-                }
             }
         });
 
